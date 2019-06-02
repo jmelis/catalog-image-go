@@ -57,47 +57,52 @@ func NewGitBundleStore(options Options) (*GitBundleStore, error) {
 		},
 	})
 
-	h := plumbing.Hash{}
+	refHeadHash := plumbing.Hash{}
 
 	refs, _ := r.References()
 	refs.ForEach(func(ref *plumbing.Reference) error {
 		if ref.Type() == plumbing.HashReference {
 			remoteRefName := fmt.Sprintf("refs/remotes/origin/%s", options.GitBranch)
 			if ref.Name() == plumbing.ReferenceName(remoteRefName) {
-				h = ref.Hash()
+				refHeadHash = ref.Hash()
 			}
 		}
 		return nil
 	})
 
-	if h == plumbing.ZeroHash {
-		// TODO: implement
-		panic("NOPE")
-	}
-
 	refName := fmt.Sprintf("refs/heads/%s", options.GitBranch)
-	ref := plumbing.NewHashReference(plumbing.ReferenceName(refName), h)
+	if refHeadHash == plumbing.ZeroHash {
+		refHead := plumbing.NewSymbolicReference(plumbing.HEAD, plumbing.ReferenceName(refName))
+		err = r.Storer.SetReference(refHead)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		refBranch := plumbing.NewHashReference(plumbing.ReferenceName(refName), refHeadHash)
+		err = r.Storer.SetReference(refBranch)
+		if err != nil {
+			return nil, err
+		}
 
-	// The created reference is saved in the storage.
-	err = r.Storer.SetReference(ref)
+		refHead := plumbing.NewSymbolicReference(plumbing.HEAD, plumbing.ReferenceName(refName))
+		err = r.Storer.SetReference(refHead)
+		if err != nil {
+			return nil, err
+		}
 
-	// Checkout
-	w, err := r.Worktree()
-	if err != nil {
-		return nil, err
-	}
+		// Checkout
+		w, err := r.Worktree()
+		if err != nil {
+			return nil, err
+		}
 
-	head, err := r.Head()
-	if err != nil {
-		return nil, err
-	}
-
-	err = w.Reset(&git.ResetOptions{
-		Mode:   git.MergeReset,
-		Commit: head.Hash(),
-	})
-	if err != nil {
-		return nil, err
+		err = w.Reset(&git.ResetOptions{
+			Mode:   git.HardReset,
+			Commit: refHeadHash,
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &GitBundleStore{r: r, options: options}, nil
