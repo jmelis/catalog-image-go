@@ -8,6 +8,7 @@ import (
 
 	"gopkg.in/src-d/go-billy.v4/memfs"
 	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
@@ -35,13 +36,65 @@ func NewGitBundleStore(options Options) (*GitBundleStore, error) {
 	storer := memory.NewStorage()
 	fs := memfs.New()
 
-	r, err := git.Clone(storer, fs, &git.CloneOptions{
+	r, err := git.Init(storer, fs)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = r.CreateRemote(&config.RemoteConfig{
+		Name: "origin",
+		URLs: []string{options.Repo},
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	err = r.Fetch(&git.FetchOptions{
+		RemoteName: "origin",
 		Auth: &http.BasicAuth{
 			Username: options.Username,
 			Password: options.Token,
 		},
-		ReferenceName: plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", options.GitBranch)),
-		URL:           options.Repo,
+	})
+
+	h := plumbing.Hash{}
+
+	refs, _ := r.References()
+	refs.ForEach(func(ref *plumbing.Reference) error {
+		if ref.Type() == plumbing.HashReference {
+			remoteRefName := fmt.Sprintf("refs/remotes/origin/%s", options.GitBranch)
+			if ref.Name() == plumbing.ReferenceName(remoteRefName) {
+				h = ref.Hash()
+			}
+		}
+		return nil
+	})
+
+	if h == plumbing.ZeroHash {
+		// TODO: implement
+		panic("NOPE")
+	}
+
+	refName := fmt.Sprintf("refs/heads/%s", options.GitBranch)
+	ref := plumbing.NewHashReference(plumbing.ReferenceName(refName), h)
+
+	// The created reference is saved in the storage.
+	err = r.Storer.SetReference(ref)
+
+	// Checkout
+	w, err := r.Worktree()
+	if err != nil {
+		return nil, err
+	}
+
+	head, err := r.Head()
+	if err != nil {
+		return nil, err
+	}
+
+	err = w.Reset(&git.ResetOptions{
+		Mode:   git.MergeReset,
+		Commit: head.Hash(),
 	})
 	if err != nil {
 		return nil, err
@@ -50,7 +103,7 @@ func NewGitBundleStore(options Options) (*GitBundleStore, error) {
 	return &GitBundleStore{r: r, options: options}, nil
 }
 
-// AddFile TOOD
+// AddFile TODO
 func (g *GitBundleStore) AddFile(path string, content []byte) error {
 	w, err := g.r.Worktree()
 	if err != nil {
