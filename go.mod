@@ -1,4 +1,4 @@
-module github.com/app-sre/catalog-image
+module github.com/jmelis/catalog-image-go
 
 require (
 	gopkg.in/src-d/go-billy.v4 v4.2.1
