@@ -31,7 +31,7 @@ type GitBundleStore struct {
 }
 
 // NewGitBundleStore TODO
-func NewGitBundleStore(options Options) (GitBundleStore, error) {
+func NewGitBundleStore(options Options) (*GitBundleStore, error) {
 	storer := memory.NewStorage()
 	fs := memfs.New()
 
@@ -44,14 +44,14 @@ func NewGitBundleStore(options Options) (GitBundleStore, error) {
 		URL:           options.Repo,
 	})
 	if err != nil {
-		return GitBundleStore{}, err
+		return nil, err
 	}
 
-	return GitBundleStore{r: r, options: options}, nil
+	return &GitBundleStore{r: r, options: options}, nil
 }
 
 // AddFile TOOD
-func (g GitBundleStore) AddFile(path string, content []byte) error {
+func (g *GitBundleStore) AddFile(path string, content []byte) error {
 	w, err := g.r.Worktree()
 	if err != nil {
 		return err
@@ -79,7 +79,7 @@ func (g GitBundleStore) AddFile(path string, content []byte) error {
 }
 
 // Save TODO
-func (g GitBundleStore) Save() error {
+func (g *GitBundleStore) Save() error {
 	w, err := g.r.Worktree()
 	if err != nil {
 		return err

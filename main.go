@@ -33,10 +33,7 @@ func main() {
 	bundleStore, err := gitbundlestore.NewGitBundleStore(gitBundleStoreOptions)
 	CheckIfError(err)
 
-	err = bundleStore.AddFile("b6/a", []byte("hello AddFile1"))
-	CheckIfError(err)
-
-	err = bundleStore.AddFile("ttt", []byte("hello AddFile2"))
+	err = bundleStore.AddFile("b7/a", []byte("hello AddFile1"))
 	CheckIfError(err)
 
 	err = bundleStore.Save()
