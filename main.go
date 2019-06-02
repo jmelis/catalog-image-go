@@ -2,23 +2,26 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
 
+	"gopkg.in/src-d/go-billy.v4/memfs"
 	"gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
+	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
 var repo = "https://github.com/jmelis/test-catalog-image"
 var username = "app"
 var token = os.Getenv("GITHUB_TOKEN")
 var directory = "tmp"
-var bundleDir = "b3"
+var bundleDir = "b4"
 var gitName = "Jaime Melis"
 var gitEmail = "j.melis@gmail.com"
+var gitBranch = "master"
 
 // CheckIfError bla
 func CheckIfError(err error) {
@@ -28,19 +31,22 @@ func CheckIfError(err error) {
 }
 
 // TODO: in-memory
-// TODO: create branch if not exists
+// TODO: create branch if not exists (https://github.com/src-d/go-git/blob/master/_examples/branch/main.go)
+// TODO: add dir function
 // TODO: remove dir
-// TODO: add dir
 // TODO: change file
 
 func main() {
-	r, err := git.PlainClone(directory, false, &git.CloneOptions{
+	storer := memory.NewStorage()
+	fs := memfs.New()
+
+	r, err := git.Clone(storer, fs, &git.CloneOptions{
 		Auth: &http.BasicAuth{
 			Username: username,
 			Password: token,
 		},
-		URL:      repo,
-		Progress: os.Stdout,
+		ReferenceName: plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", gitBranch)),
+		URL:           repo,
 	})
 	CheckIfError(err)
 
@@ -48,11 +54,13 @@ func main() {
 	CheckIfError(err)
 
 	// create bundle dir
-	os.MkdirAll(filepath.Join(directory, bundleDir), os.ModePerm)
+	fs.MkdirAll(bundleDir, os.ModePerm)
 
 	// create file
-	filename := filepath.Join(directory, bundleDir, "example-git-file")
-	err = ioutil.WriteFile(filename, []byte("hello world!"), 0644)
+	file, err := fs.Create(filepath.Join(bundleDir, "example-git-file"))
+	CheckIfError(err)
+
+	_, err = file.Write([]byte("hello from memfs!"))
 	CheckIfError(err)
 
 	// Adds the bundleDir to the staging area.
@@ -79,3 +87,26 @@ func main() {
 	})
 	CheckIfError(err)
 }
+
+// // GitBundleStore TODO
+// type GitBundleStore struct {
+// 	r *git.Repository
+// }
+
+// // NewGitBundleStore TODO
+// func NewGitBundleStore() GitBundleStore {
+// 	storer := memory.NewStorage()
+// 	fs := memfs.New()
+
+// 	r, err := git.Clone(storer, fs, &git.CloneOptions{
+// 		Auth: &http.BasicAuth{
+// 			Username: username,
+// 			Password: token,
+// 		},
+// 		ReferenceName: plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", gitBranch)),
+// 		URL:           repo,
+// 	})
+// 	CheckIfError(err)
+
+// 	return GitBundleStore{r}
+// }
