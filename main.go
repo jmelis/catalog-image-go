@@ -17,8 +17,6 @@ import (
 var repo = "https://github.com/jmelis/test-catalog-image"
 var username = "app"
 var token = os.Getenv("GITHUB_TOKEN")
-var directory = "tmp"
-var bundleDir = "b4"
 var gitName = "Jaime Melis"
 var gitEmail = "j.melis@gmail.com"
 var gitBranch = "master"
@@ -30,13 +28,34 @@ func CheckIfError(err error) {
 	}
 }
 
-// TODO: in-memory
+// Qs:
+// - New? Pointer to struct?
+// - Interface? Register with init() ?
+// - Create branch?
+// - Chmod file?
+// - GitBundleStoreOptions. Pointer to struct?
+
 // TODO: create branch if not exists (https://github.com/src-d/go-git/blob/master/_examples/branch/main.go)
 // TODO: add dir function
 // TODO: remove dir
 // TODO: change file
 
 func main() {
+	bundleStore := NewGitBundleStore()
+
+	bundleStore.AddFile("b5/a", []byte("hello AddFile1"))
+	bundleStore.AddFile("ttt", []byte("hello AddFile2"))
+
+	bundleStore.Save()
+}
+
+// GitBundleStore TODO
+type GitBundleStore struct {
+	r *git.Repository
+}
+
+// NewGitBundleStore TODO
+func NewGitBundleStore() GitBundleStore {
 	storer := memory.NewStorage()
 	fs := memfs.New()
 
@@ -50,25 +69,42 @@ func main() {
 	})
 	CheckIfError(err)
 
-	w, err := r.Worktree()
+	return GitBundleStore{r}
+}
+
+// AddFile TOOD
+func (g GitBundleStore) AddFile(path string, content []byte) {
+	w, err := g.r.Worktree()
 	CheckIfError(err)
+
+	// get Filesystem
+	fs := w.Filesystem
 
 	// create bundle dir
-	fs.MkdirAll(bundleDir, os.ModePerm)
+	dirPath := filepath.Dir(path)
+	baseName := filepath.Base(path)
+
+	fs.MkdirAll(dirPath, os.ModePerm)
 
 	// create file
-	file, err := fs.Create(filepath.Join(bundleDir, "example-git-file"))
+	file, err := fs.Create(filepath.Join(dirPath, baseName))
 	CheckIfError(err)
 
-	_, err = file.Write([]byte("hello from memfs!"))
+	_, err = file.Write(content)
 	CheckIfError(err)
 
-	// Adds the bundleDir to the staging area.
-	_, err = w.Add(bundleDir)
+	// Adds the path to the staging area.
+	_, err = w.Add(path)
+	CheckIfError(err)
+}
+
+// Save TODO
+func (g GitBundleStore) Save() error {
+	w, err := g.r.Worktree()
 	CheckIfError(err)
 
 	// Commit
-	commitMsg := fmt.Sprintf("add bundledir %s", bundleDir)
+	commitMsg := fmt.Sprintf("commit")
 	_, err = w.Commit(commitMsg, &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  gitName,
@@ -79,34 +115,13 @@ func main() {
 	CheckIfError(err)
 
 	// Push
-	err = r.Push(&git.PushOptions{
+	err = g.r.Push(&git.PushOptions{
 		Auth: &http.BasicAuth{
 			Username: username,
 			Password: token,
 		},
 	})
 	CheckIfError(err)
+
+	return nil
 }
-
-// // GitBundleStore TODO
-// type GitBundleStore struct {
-// 	r *git.Repository
-// }
-
-// // NewGitBundleStore TODO
-// func NewGitBundleStore() GitBundleStore {
-// 	storer := memory.NewStorage()
-// 	fs := memfs.New()
-
-// 	r, err := git.Clone(storer, fs, &git.CloneOptions{
-// 		Auth: &http.BasicAuth{
-// 			Username: username,
-// 			Password: token,
-// 		},
-// 		ReferenceName: plumbing.ReferenceName(fmt.Sprintf("refs/heads/%s", gitBranch)),
-// 		URL:           repo,
-// 	})
-// 	CheckIfError(err)
-
-// 	return GitBundleStore{r}
-// }
