@@ -109,8 +109,20 @@ func NewGitBundleStore(options GitBundleStoreOptions) (*GitBundleStore, error) {
 	return &GitBundleStore{r: r, options: options}, nil
 }
 
-// AddFile TODO
-func (g *GitBundleStore) AddFile(path string, content []byte) error {
+// DeleteFile TODO
+func (g *GitBundleStore) DeleteFile(path string) error {
+	w, err := g.r.Worktree()
+	if err != nil {
+		return err
+	}
+
+	// Adds the path to the staging area.
+	_, err = w.Remove(path)
+	return nil
+}
+
+// WriteFile TODO
+func (g *GitBundleStore) WriteFile(path string, content []byte) error {
 	w, err := g.r.Worktree()
 	if err != nil {
 		return err
