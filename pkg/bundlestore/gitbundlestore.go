@@ -1,4 +1,4 @@
-package gitbundlestore
+package bundlestore
 
 import (
 	"fmt"
@@ -15,8 +15,8 @@ import (
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
-// Options TODO
-type Options struct {
+// GitBundleStoreOptions TODO
+type GitBundleStoreOptions struct {
 	Repo      string
 	Username  string
 	Token     string
@@ -28,13 +28,14 @@ type Options struct {
 // GitBundleStore TODO
 type GitBundleStore struct {
 	r       *git.Repository
-	options Options
+	options GitBundleStoreOptions
 }
 
 // NewGitBundleStore TODO
-func NewGitBundleStore(options Options) (*GitBundleStore, error) {
+func NewGitBundleStore(options GitBundleStoreOptions) (*GitBundleStore, error) {
 	storer := memory.NewStorage()
 	fs := memfs.New()
+	origin := "origin"
 
 	r, err := git.Init(storer, fs)
 	if err != nil {
@@ -42,7 +43,7 @@ func NewGitBundleStore(options Options) (*GitBundleStore, error) {
 	}
 
 	_, err = r.CreateRemote(&config.RemoteConfig{
-		Name: "origin",
+		Name: origin,
 		URLs: []string{options.Repo},
 	})
 	if err != nil {
@@ -50,7 +51,7 @@ func NewGitBundleStore(options Options) (*GitBundleStore, error) {
 	}
 
 	err = r.Fetch(&git.FetchOptions{
-		RemoteName: "origin",
+		RemoteName: origin,
 		Auth: &http.BasicAuth{
 			Username: options.Username,
 			Password: options.Token,

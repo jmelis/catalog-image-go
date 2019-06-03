@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/jmelis/catalog-image-go/pkg/gitbundlestore"
+	"github.com/jmelis/catalog-image-go/pkg/bundlestore"
 )
 
 var repo = "https://github.com/jmelis/test-catalog-image"
@@ -11,7 +11,7 @@ var username = "app"
 var token = os.Getenv("GITHUB_TOKEN")
 var gitName = "Jaime Melis"
 var gitEmail = "j.melis@gmail.com"
-var gitBranch = "master"
+var gitBranch = "master2"
 
 // CheckIfError bla
 func CheckIfError(err error) {
@@ -21,7 +21,7 @@ func CheckIfError(err error) {
 }
 
 func main() {
-	gitBundleStoreOptions := gitbundlestore.Options{
+	gitBundleStoreOptions := bundlestore.GitBundleStoreOptions{
 		Repo:      repo,
 		Username:  username,
 		Token:     token,
@@ -30,10 +30,10 @@ func main() {
 		GitBranch: gitBranch,
 	}
 
-	bundleStore, err := gitbundlestore.NewGitBundleStore(gitBundleStoreOptions)
+	bundleStore, err := bundlestore.NewGitBundleStore(gitBundleStoreOptions)
 	CheckIfError(err)
 
-	err = bundleStore.AddFile("b7/a", []byte("hello AddFile1"))
+	err = bundleStore.AddFile("b4/a", []byte("hello AddFile1"))
 	CheckIfError(err)
 
 	err = bundleStore.Save()
