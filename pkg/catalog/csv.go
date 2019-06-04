@@ -8,6 +8,14 @@ type CSV struct {
 	content []byte
 }
 
+// CSVSuffix all CSVs must end with this suffix
+const CSVSuffix = ".clusterserviceversion.yaml"
+
+// CSVName generates the name of a CSV file
+func CSVName(operator, version string) string {
+	return fmt.Sprintf("%s-operator.v%s%s", operator, version, CSVSuffix)
+}
+
 // SetReplaces returns a new CSV with a modified .spec.replaces
 func (c CSV) SetReplaces(replaces string) (CSV, error) {
 	var spec map[string]interface{}

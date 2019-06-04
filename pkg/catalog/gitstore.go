@@ -8,12 +8,17 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/src-d/go-billy.v4"
 	"gopkg.in/src-d/go-billy.v4/memfs"
+	"gopkg.in/src-d/go-billy.v4/osfs"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/config"
 	"gopkg.in/src-d/go-git.v4/plumbing"
+	"gopkg.in/src-d/go-git.v4/plumbing/cache"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
+	"gopkg.in/src-d/go-git.v4/storage"
+	"gopkg.in/src-d/go-git.v4/storage/filesystem"
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
@@ -26,6 +31,8 @@ type GitStoreOptions struct {
 	GitName   string
 	GitEmail  string
 	GitBranch string
+	// GitDir cloned repo path. If empty it will clone in memory.
+	GitDir string
 }
 
 // GitStore TODO
@@ -36,8 +43,17 @@ type GitStore struct {
 
 // NewGitStore TODO
 func NewGitStore(options GitStoreOptions) (*GitStore, error) {
-	storer := memory.NewStorage()
-	fs := memfs.New()
+	var fs billy.Filesystem
+	var storer storage.Storer
+
+	if options.GitDir != "" {
+		fs = osfs.New(options.GitDir)
+		dot, _ := fs.Chroot(".git")
+		storer = filesystem.NewStorage(dot, cache.NewObjectLRUDefault())
+	} else {
+		storer = memory.NewStorage()
+		fs = memfs.New()
+	}
 
 	origin := "origin"
 
@@ -173,9 +189,8 @@ func (g *GitStore) readFile(path string) ([]byte, error) {
 	return data, nil
 }
 
-func (g *GitStore) load() ([]Bundle, error) {
+func (g *GitStore) load() (Bundles, error) {
 	operator := g.options.Operator
-	csvSuffix := ".clusterserviceversion.yaml"
 
 	w, err := g.r.Worktree()
 	if err != nil {
@@ -189,14 +204,13 @@ func (g *GitStore) load() ([]Bundle, error) {
 		return nil, err
 	}
 
-	var bundles []Bundle
+	var bundles Bundles
 	for _, bundleDir := range files {
 		if bundleDir.IsDir() {
 			dirPath := filepath.Join(operator, bundleDir.Name())
 
 			// read csv
-			csvFileName := fmt.Sprintf("%s-operator.v%s%s", operator, bundleDir.Name(), csvSuffix)
-			csvFilePath := filepath.Join(dirPath, csvFileName)
+			csvFilePath := filepath.Join(dirPath, CSVName(operator, bundleDir.Name()))
 
 			content, err := g.readFile(csvFilePath)
 			if err != nil {
@@ -218,7 +232,7 @@ func (g *GitStore) load() ([]Bundle, error) {
 			for _, sideFile := range sideFiles {
 				sideFilePath := filepath.Join(dirPath, sideFile.Name())
 
-				if strings.HasSuffix(sideFile.Name(), csvSuffix) {
+				if strings.HasSuffix(sideFile.Name(), CSVSuffix) {
 					continue
 				}
 
@@ -245,14 +259,33 @@ func (g *GitStore) load() ([]Bundle, error) {
 	return bundles, nil
 }
 
-func (g *GitStore) save() error {
+func (g *GitStore) save(bundles Bundles) error {
+	for _, bundle := range bundles {
+		bundleDir := filepath.Join(g.options.Operator, bundle.csv.version)
+
+		// write sidefiles
+		for _, sf := range bundle.sidefiles {
+			sfPath := filepath.Join(bundleDir, sf.name)
+			g.writeFile(sfPath, sf.content)
+		}
+
+		// write csv
+		csvPath := filepath.Join(bundleDir, CSVName(g.options.Operator, bundle.csv.version))
+		g.writeFile(csvPath, bundle.csv.content)
+	}
+
+	// TODO: create packagefile
+	return g.commit()
+}
+
+func (g *GitStore) commit() error {
 	w, err := g.r.Worktree()
 	if err != nil {
 		return err
 	}
 
 	// Commit
-	commitMsg := fmt.Sprintf("commit")
+	commitMsg := fmt.Sprintf("commit1")
 	_, err = w.Commit(commitMsg, &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  g.options.GitName,
@@ -264,12 +297,12 @@ func (g *GitStore) save() error {
 		return err
 	}
 
-	// Push
-	err = g.r.Push(&git.PushOptions{
-		Auth: &http.BasicAuth{
-			Username: g.options.Username,
-			Password: g.options.Token,
-		},
-	})
+	// // Push
+	// err = g.r.Push(&git.PushOptions{
+	// 	Auth: &http.BasicAuth{
+	// 		Username: g.options.Username,
+	// 		Password: g.options.Token,
+	// 	},
+	// })
 	return err
 }

@@ -5,3 +5,6 @@ type Bundle struct {
 	csv       CSV
 	sidefiles []SideFile
 }
+
+// Bundles is a collection of bundles
+type Bundles []Bundle

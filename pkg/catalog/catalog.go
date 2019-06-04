@@ -5,7 +5,7 @@ package catalog
 type Catalog struct {
 	operator string
 	store    Store
-	bundles  []Bundle
+	bundles  Bundles
 }
 
 // NewCatalog returns a new Catalog with the specified store
@@ -26,5 +26,5 @@ func (c *Catalog) Load() error {
 
 // Save all the bundles to storage
 func (c *Catalog) Save() error {
-	return c.store.save()
+	return c.store.save(c.bundles)
 }

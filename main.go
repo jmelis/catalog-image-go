@@ -1,13 +1,10 @@
 package main
 
 import (
-	"log"
 	"os"
 
 	"github.com/jmelis/catalog-image-go/pkg/catalog"
 )
-
-// ../catalog-image/test/fixtures/bundles/0.1.506-14cff03
 
 var operator = "hive"
 var repo = "https://github.com/jmelis/test-catalog-image"
@@ -15,34 +12,38 @@ var username = "app"
 var token = os.Getenv("GITHUB_TOKEN")
 var gitName = "Jaime Melis"
 var gitEmail = "j.melis@gmail.com"
-var gitBranch = "master2"
+var gitBranch = "master"
+var gitDir = "/home/jmelis/borrar/tmpgit"
 
-// CheckIfError bla
-func CheckIfError(err error) {
+func checkIfError(err error) {
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }
 
 func main() {
 	gitStoreOptions := catalog.GitStoreOptions{
+		Operator:  operator,
 		Repo:      repo,
 		Username:  username,
 		Token:     token,
 		GitName:   gitName,
 		GitEmail:  gitEmail,
 		GitBranch: gitBranch,
+		GitDir:    gitDir,
 	}
 
 	store, err := catalog.NewGitStore(gitStoreOptions)
-	CheckIfError(err)
+	checkIfError(err)
 
 	c := catalog.NewCatalog(operator, store)
 
 	c.Load()
-	// err = bundleStore.DeleteFile("b4/a")
-	// CheckIfError(err)
+	c.Save()
 
-	// err = bundleStore.Save()
-	// CheckIfError(err)
+	// err = c.WriteFile()
+	// checkIfError(err)
+
+	// err = c.Save()
+	// checkIfError(err)
 }
