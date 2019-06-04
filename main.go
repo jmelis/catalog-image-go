@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/jmelis/catalog-image-go/pkg/catalog"
@@ -39,7 +40,8 @@ func main() {
 	c := catalog.NewCatalog(operator, store)
 
 	c.Load()
-	c.Save()
+	fmt.Println(c.Bundles().FindLatestCSV())
+	// c.Save()
 
 	// err = c.WriteFile()
 	// checkIfError(err)

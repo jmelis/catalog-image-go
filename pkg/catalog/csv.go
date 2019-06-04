@@ -13,7 +13,12 @@ const CSVSuffix = ".clusterserviceversion.yaml"
 
 // CSVName generates the name of a CSV file
 func CSVName(operator, version string) string {
-	return fmt.Sprintf("%s-operator.v%s%s", operator, version, CSVSuffix)
+	return fmt.Sprintf("%s-operator.v%s", operator, version)
+}
+
+// CSVFileName generates the name of a CSV file
+func CSVFileName(operator, version string) string {
+	return CSVName(operator, version) + CSVSuffix
 }
 
 // NewCSV returns a new CSV

@@ -28,3 +28,8 @@ func (c *Catalog) Load() error {
 func (c *Catalog) Save() error {
 	return c.store.save(c.bundles)
 }
+
+// Bundles get the bundles
+func (c *Catalog) Bundles() Bundles {
+	return c.bundles
+}

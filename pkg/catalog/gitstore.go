@@ -211,7 +211,7 @@ func (g *GitStore) load() (Bundles, error) {
 			dirPath := filepath.Join(operator, version)
 
 			// read csv
-			csvFilePath := filepath.Join(dirPath, CSVName(operator, version))
+			csvFilePath := filepath.Join(dirPath, CSVFileName(operator, version))
 
 			content, err := g.readFile(csvFilePath)
 			if err != nil {
@@ -253,7 +253,13 @@ func (g *GitStore) load() (Bundles, error) {
 				sidefiles = append(sidefiles, sidefile)
 			}
 
-			bundles = append(bundles, Bundle{csv: csv, sidefiles: sidefiles})
+			bundle := Bundle{
+				operator:  g.options.Operator,
+				csv:       csv,
+				sidefiles: sidefiles,
+			}
+
+			bundles = append(bundles, bundle)
 		}
 	}
 
@@ -271,7 +277,7 @@ func (g *GitStore) save(bundles Bundles) error {
 		}
 
 		// write csv
-		csvPath := filepath.Join(bundleDir, CSVName(g.options.Operator, bundle.csv.version))
+		csvPath := filepath.Join(bundleDir, CSVFileName(g.options.Operator, bundle.csv.version))
 		g.writeFile(csvPath, bundle.csv.content)
 	}
 
