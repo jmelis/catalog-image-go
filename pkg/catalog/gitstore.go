@@ -1,9 +1,11 @@
-package bundlestore
+package catalog
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"gopkg.in/src-d/go-billy.v4/memfs"
@@ -15,8 +17,9 @@ import (
 	"gopkg.in/src-d/go-git.v4/storage/memory"
 )
 
-// GitBundleStoreOptions TODO
-type GitBundleStoreOptions struct {
+// GitStoreOptions TODO
+type GitStoreOptions struct {
+	Operator  string
 	Repo      string
 	Username  string
 	Token     string
@@ -25,16 +28,17 @@ type GitBundleStoreOptions struct {
 	GitBranch string
 }
 
-// GitBundleStore TODO
-type GitBundleStore struct {
+// GitStore TODO
+type GitStore struct {
 	r       *git.Repository
-	options GitBundleStoreOptions
+	options GitStoreOptions
 }
 
-// NewGitBundleStore TODO
-func NewGitBundleStore(options GitBundleStoreOptions) (*GitBundleStore, error) {
+// NewGitStore TODO
+func NewGitStore(options GitStoreOptions) (*GitStore, error) {
 	storer := memory.NewStorage()
 	fs := memfs.New()
+
 	origin := "origin"
 
 	r, err := git.Init(storer, fs)
@@ -106,11 +110,10 @@ func NewGitBundleStore(options GitBundleStoreOptions) (*GitBundleStore, error) {
 		}
 	}
 
-	return &GitBundleStore{r: r, options: options}, nil
+	return &GitStore{r: r, options: options}, nil
 }
 
-// DeleteFile TODO
-func (g *GitBundleStore) DeleteFile(path string) error {
+func (g *GitStore) deleteFile(path string) error {
 	w, err := g.r.Worktree()
 	if err != nil {
 		return err
@@ -121,14 +124,13 @@ func (g *GitBundleStore) DeleteFile(path string) error {
 	return nil
 }
 
-// WriteFile TODO
-func (g *GitBundleStore) WriteFile(path string, content []byte) error {
+func (g *GitStore) writeFile(path string, content []byte) error {
 	w, err := g.r.Worktree()
 	if err != nil {
 		return err
 	}
 
-	// create bundle dir
+	// create leading dirs
 	dirPath := filepath.Dir(path)
 	baseName := filepath.Base(path)
 	w.Filesystem.MkdirAll(dirPath, os.ModePerm)
@@ -149,8 +151,101 @@ func (g *GitBundleStore) WriteFile(path string, content []byte) error {
 	return err
 }
 
-// Save TODO
-func (g *GitBundleStore) Save() error {
+func (g *GitStore) readFile(path string) ([]byte, error) {
+	w, err := g.r.Worktree()
+	if err != nil {
+		return nil, err
+	}
+
+	fs := w.Filesystem
+
+	fd, err := fs.Open(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// read file
+	data, err := ioutil.ReadAll(fd)
+	if err != nil {
+		return nil, err
+	}
+
+	return data, nil
+}
+
+func (g *GitStore) load() ([]Bundle, error) {
+	operator := g.options.Operator
+	csvSuffix := ".clusterserviceversion.yaml"
+
+	w, err := g.r.Worktree()
+	if err != nil {
+		return nil, err
+	}
+
+	fs := w.Filesystem
+
+	files, err := fs.ReadDir(operator)
+	if err != nil {
+		return nil, err
+	}
+
+	var bundles []Bundle
+	for _, bundleDir := range files {
+		if bundleDir.IsDir() {
+			dirPath := filepath.Join(operator, bundleDir.Name())
+
+			// read csv
+			csvFileName := fmt.Sprintf("%s-operator.v%s%s", operator, bundleDir.Name(), csvSuffix)
+			csvFilePath := filepath.Join(dirPath, csvFileName)
+
+			content, err := g.readFile(csvFilePath)
+			if err != nil {
+				return nil, err
+			}
+
+			csv := CSV{
+				version: bundleDir.Name(),
+				content: content,
+			}
+
+			// read rest of files
+			sideFiles, err := fs.ReadDir(dirPath)
+			if err != nil {
+				return nil, err
+			}
+
+			var sidefiles []SideFile
+			for _, sideFile := range sideFiles {
+				sideFilePath := filepath.Join(dirPath, sideFile.Name())
+
+				if strings.HasSuffix(sideFile.Name(), csvSuffix) {
+					continue
+				}
+
+				if !strings.HasSuffix(sideFile.Name(), ".yaml") {
+					return nil, fmt.Errorf("only '.yaml' is supported")
+				}
+
+				content, err := g.readFile(sideFilePath)
+				if err != nil {
+					return nil, err
+				}
+
+				sidefile := SideFile{
+					name:    sideFile.Name(),
+					content: content,
+				}
+				sidefiles = append(sidefiles, sidefile)
+			}
+
+			bundles = append(bundles, Bundle{csv: csv, sidefiles: sidefiles})
+		}
+	}
+
+	return bundles, nil
+}
+
+func (g *GitStore) save() error {
 	w, err := g.r.Worktree()
 	if err != nil {
 		return err
