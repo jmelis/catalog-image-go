@@ -16,6 +16,16 @@ func CSVName(operator, version string) string {
 	return fmt.Sprintf("%s-operator.v%s%s", operator, version, CSVSuffix)
 }
 
+// NewCSV returns a new CSV
+func NewCSV(version string, content []byte) (CSV, error) {
+	content, err := CanonicalizeYaml(content)
+	if err != nil {
+		return CSV{}, err
+	}
+
+	return CSV{version: version, content: content}, nil
+}
+
 // SetReplaces returns a new CSV with a modified .spec.replaces
 func (c CSV) SetReplaces(replaces string) (CSV, error) {
 	var spec map[string]interface{}

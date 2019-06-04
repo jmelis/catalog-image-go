@@ -207,19 +207,20 @@ func (g *GitStore) load() (Bundles, error) {
 	var bundles Bundles
 	for _, bundleDir := range files {
 		if bundleDir.IsDir() {
-			dirPath := filepath.Join(operator, bundleDir.Name())
+			version := bundleDir.Name()
+			dirPath := filepath.Join(operator, version)
 
 			// read csv
-			csvFilePath := filepath.Join(dirPath, CSVName(operator, bundleDir.Name()))
+			csvFilePath := filepath.Join(dirPath, CSVName(operator, version))
 
 			content, err := g.readFile(csvFilePath)
 			if err != nil {
 				return nil, err
 			}
 
-			csv := CSV{
-				version: bundleDir.Name(),
-				content: content,
+			csv, err := NewCSV(version, content)
+			if err != nil {
+				return nil, err
 			}
 
 			// read rest of files
