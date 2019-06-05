@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/jmelis/catalog-image-go/pkg/catalog"
@@ -13,7 +14,7 @@ var username = "app"
 var token = os.Getenv("GITHUB_TOKEN")
 var gitName = "Jaime Melis"
 var gitEmail = "j.melis@gmail.com"
-var gitBranch = "master4"
+var gitBranch = "master"
 var gitDir = "/home/jmelis/borrar/tmpgit"
 var bundlePath = "/home/jmelis/work/git/catalog-image/test/fixtures/bundles/0.1.700-0000000"
 
@@ -42,9 +43,18 @@ func main() {
 	c, err := catalog.LoadCatalog(store)
 	checkIfError(err)
 
-	err = c.AddBundle(bundlePath)
+	err = c.RemoveBundle("hive-operator.v0.1.598-1af4d6f")
 	checkIfError(err)
 
-	err = c.Save()
-	checkIfError(err)
+	for _, b := range c.Bundles {
+		fmt.Println(b.CSV.Name())
+	}
+
+	// err = c.Bundles.PruneAfterCSV("hive-operator.v0.1.598-1af4d6f")
+
+	// err = c.AddBundle(bundlePath)
+	// checkIfError(err)
+
+	// err = c.Save()
+	// checkIfError(err)
 }

@@ -194,6 +194,7 @@ func (g *GitStore) readFile(path string) ([]byte, error) {
 	return data, nil
 }
 
+// Load TODO
 func (g *GitStore) Load() (*Catalog, error) {
 	operator := g.options.Operator
 	var bundles Bundles
@@ -275,6 +276,7 @@ func (g *GitStore) Load() (*Catalog, error) {
 	return &Catalog{Operator: operator, store: g, Bundles: bundles}, nil
 }
 
+// Save TODO
 func (g *GitStore) Save(c *Catalog) error {
 	bundles := c.Bundles
 	for _, bundle := range bundles {
@@ -297,12 +299,12 @@ func (g *GitStore) Save(c *Catalog) error {
 		}
 	}
 
-	currentCSV, err := bundles.FindLatestCSV()
+	latestBundle, err := c.FindLatestBundle()
 	if err != nil {
 		return err
 	}
 
-	packageFile := NewPackageFile(g.options.Operator, g.options.Operator, currentCSV)
+	packageFile := NewPackageFile(g.options.Operator, g.options.Operator, latestBundle.Name())
 
 	packageFileYAML, err := packageFile.YAML()
 	if err != nil {

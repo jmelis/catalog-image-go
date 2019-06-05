@@ -1,6 +1,7 @@
 package catalog
 
 import (
+	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
@@ -33,7 +34,7 @@ func (c *Catalog) AddBundle(path string) error {
 	var csv CSV
 	var sidefiles []SideFile
 
-	latestCSV, err := c.FindLatestCSV()
+	latestBundle, err := c.FindLatestBundle()
 	if err != nil {
 		return err
 	}
@@ -56,7 +57,7 @@ func (c *Catalog) AddBundle(path string) error {
 					return err
 				}
 
-				err := (&csv).SetReplaces(latestCSV)
+				err := (&csv).SetReplaces(latestBundle.Name())
 				if err != nil {
 					return err
 				}
@@ -81,7 +82,112 @@ func (c *Catalog) AddBundle(path string) error {
 	return nil
 }
 
-// FindLatestCSV calculates the latest CSV from the bundles
-func (c *Catalog) FindLatestCSV() (string, error) {
-	return c.Bundles.FindLatestCSV()
+// FindLatestBundle returns the latest bundle
+func (c *Catalog) FindLatestBundle() (Bundle, error) {
+	var latestBundleName string
+	var latestBundle Bundle
+
+	if len(c.Bundles) == 0 {
+		return latestBundle, fmt.Errorf("no bundles exist")
+	}
+
+	setReplaces := make(map[string]bool)
+	setCSV := make(map[string]bool)
+
+	for _, b := range c.Bundles {
+		if csvReplaces := b.Replaces(); csvReplaces != "" {
+			setReplaces[csvReplaces] = true
+		}
+		setCSV[b.CSV.Name()] = true
+	}
+
+	for csvReplaces := range setReplaces {
+		delete(setCSV, csvReplaces)
+	}
+
+	if len(setCSV) != 1 {
+		err := fmt.Errorf("invalid number of leaves found: %d", len(setCSV))
+
+		return latestBundle, err
+	}
+
+	for csv := range setCSV {
+		latestBundleName = csv
+	}
+
+	for _, b := range c.Bundles {
+		if b.Name() == latestBundleName {
+			return b, nil
+		}
+	}
+
+	return latestBundle, fmt.Errorf("latest bundle not found")
+}
+
+// RemoveBundle removes a bundle from Bundles without updating the replaces field
+func (c *Catalog) RemoveBundle(csvName string) error {
+	csvIndex := -1
+	for i, b := range c.Bundles {
+		if b.CSV.Name() == csvName {
+			csvIndex = i
+			break
+		}
+	}
+
+	if csvIndex == -1 {
+		return fmt.Errorf("CSV %s not found", csvName)
+	}
+
+	c.Bundles = append(c.Bundles[:csvIndex], c.Bundles[csvIndex+1:]...)
+
+	return nil
+}
+
+// PruneAfterCSV TODO
+func (c *Catalog) PruneAfterCSV(csvName string) error {
+	var bundle Bundle
+
+	// ensure csvName exists
+	if _, err := c.GetBundle(csvName); err != nil {
+		return err
+	}
+
+	// get latest bundle
+	bundle, err := c.FindLatestBundle()
+	if err != nil {
+		return err
+	}
+
+	// start with latest bundle and remove each one until we found the bundle
+	for {
+		parent, err := c.GetBundle(bundle.Replaces())
+		if err != nil {
+			return err
+		}
+
+		if err := c.RemoveBundle(bundle.Name()); err != nil {
+			return err
+		}
+
+		bundle = parent
+
+		if bundle.Name() == csvName {
+			break
+		}
+	}
+
+	return nil
+}
+
+// GetBundle returns the Bundle object that matches a given name
+func (c *Catalog) GetBundle(csvName string) (Bundle, error) {
+	var bundle Bundle
+
+	for _, b := range c.Bundles {
+		if b.Name() == csvName {
+			return b, nil
+		}
+	}
+
+	return bundle, fmt.Errorf("Bundle %s not found", csvName)
 }
