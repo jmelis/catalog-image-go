@@ -14,25 +14,18 @@ type Catalog struct {
 	Bundles  Bundles
 }
 
-// NewCatalog returns a new Catalog with the specified store
-func NewCatalog(operator string, store Store) *Catalog {
-	return &Catalog{Operator: operator, store: store}
-}
-
-// Load all the bundles
-func (c *Catalog) Load() error {
-	bundles, err := c.store.load()
+// LoadCatalog returns a new Catalog with the specified store
+func LoadCatalog(store Store) (*Catalog, error) {
+	c, err := store.load()
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	c.Bundles = bundles
-	return nil
+	return c, nil
 }
 
 // Save all the bundles to storage
 func (c *Catalog) Save() error {
-	return c.store.save(c.Bundles)
+	return c.store.save(c)
 }
 
 // AddBundle adds a bundle in the local directory

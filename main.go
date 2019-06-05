@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/jmelis/catalog-image-go/pkg/catalog"
 )
 
 var operator = "hive"
+var channel = "staging"
 var repo = "https://github.com/jmelis/test-catalog-image"
 var username = "app"
 var token = os.Getenv("GITHUB_TOKEN")
@@ -25,6 +27,7 @@ func checkIfError(err error) {
 func main() {
 	gitStoreOptions := catalog.GitStoreOptions{
 		Operator:  operator,
+		Channel:   channel,
 		Repo:      repo,
 		Username:  username,
 		Token:     token,
@@ -37,13 +40,14 @@ func main() {
 	store, err := catalog.NewGitStore(gitStoreOptions)
 	checkIfError(err)
 
-	c := catalog.NewCatalog(operator, store)
-
-	c.Load()
+	c, err := catalog.LoadCatalog(store)
+	if err != nil {
+		panic(err)
+	}
 	c.AddBundle(bundlePath)
 	c.Save()
 
-	// for _, b := range c.Bundles {
-	// 	fmt.Println(b.CSV.Version())
-	// }
+	for _, b := range c.Bundles {
+		fmt.Println(b.CSV.Version())
+	}
 }

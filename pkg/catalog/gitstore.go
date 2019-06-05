@@ -25,6 +25,7 @@ import (
 // GitStoreOptions TODO
 type GitStoreOptions struct {
 	Operator  string
+	Channel   string
 	Repo      string
 	Username  string
 	Token     string
@@ -193,7 +194,7 @@ func (g *GitStore) readFile(path string) ([]byte, error) {
 	return data, nil
 }
 
-func (g *GitStore) load() (Bundles, error) {
+func (g *GitStore) load() (*Catalog, error) {
 	operator := g.options.Operator
 
 	w, err := g.r.Worktree()
@@ -267,10 +268,11 @@ func (g *GitStore) load() (Bundles, error) {
 		}
 	}
 
-	return bundles, nil
+	return &Catalog{Operator: operator, store: g, Bundles: bundles}, nil
 }
 
-func (g *GitStore) save(bundles Bundles) error {
+func (g *GitStore) save(c *Catalog) error {
+	bundles := c.Bundles
 	for _, bundle := range bundles {
 		bundleDir := filepath.Join(g.options.Operator, bundle.CSV.Version())
 
