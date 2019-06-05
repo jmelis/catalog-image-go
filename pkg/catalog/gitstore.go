@@ -77,6 +77,9 @@ func NewGitStore(options GitStoreOptions) (*GitStore, error) {
 			Password: options.Token,
 		},
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	refHeadHash := plumbing.Hash{}
 
@@ -86,6 +89,7 @@ func NewGitStore(options GitStoreOptions) (*GitStore, error) {
 			remoteRefName := fmt.Sprintf("refs/remotes/origin/%s", options.GitBranch)
 			if ref.Name() == plumbing.ReferenceName(remoteRefName) {
 				refHeadHash = ref.Hash()
+				return nil
 			}
 		}
 		return nil
