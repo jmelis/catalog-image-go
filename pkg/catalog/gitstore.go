@@ -24,16 +24,15 @@ import (
 
 // GitStoreOptions TODO
 type GitStoreOptions struct {
-	Operator  string
-	Channel   string
-	Repo      string
-	Username  string
-	Token     string
-	GitName   string
-	GitEmail  string
-	GitBranch string
-	// GitDir cloned repo path. If empty it will clone in memory.
-	GitDir string
+	Operator    string
+	Channel     string
+	Repo        string
+	Username    string
+	Token       string
+	AuthorName  string
+	AuthorEmail string
+	Branch      string
+	WorkDir     string // if empty it will load on memory
 }
 
 // GitStore TODO
@@ -47,8 +46,8 @@ func NewGitStore(options GitStoreOptions) (*GitStore, error) {
 	var fs billy.Filesystem
 	var storer storage.Storer
 
-	if options.GitDir != "" {
-		fs = osfs.New(options.GitDir)
+	if options.WorkDir != "" {
+		fs = osfs.New(options.WorkDir)
 		dot, _ := fs.Chroot(".git")
 		storer = filesystem.NewStorage(dot, cache.NewObjectLRUDefault())
 	} else {
@@ -87,7 +86,7 @@ func NewGitStore(options GitStoreOptions) (*GitStore, error) {
 	refs, _ := r.References()
 	refs.ForEach(func(ref *plumbing.Reference) error {
 		if ref.Type() == plumbing.HashReference {
-			remoteRefName := fmt.Sprintf("refs/remotes/origin/%s", options.GitBranch)
+			remoteRefName := fmt.Sprintf("refs/remotes/origin/%s", options.Branch)
 			if ref.Name() == plumbing.ReferenceName(remoteRefName) {
 				refHeadHash = ref.Hash()
 				return nil
@@ -96,7 +95,7 @@ func NewGitStore(options GitStoreOptions) (*GitStore, error) {
 		return nil
 	})
 
-	refName := fmt.Sprintf("refs/heads/%s", options.GitBranch)
+	refName := fmt.Sprintf("refs/heads/%s", options.Branch)
 	if refHeadHash == plumbing.ZeroHash {
 		refHead := plumbing.NewSymbolicReference(plumbing.HEAD, plumbing.ReferenceName(refName))
 		err = r.Storer.SetReference(refHead)
@@ -337,11 +336,11 @@ func (g *GitStore) commit() error {
 	}
 
 	// Commit
-	commitMsg := fmt.Sprintf("commit10")
+	commitMsg := fmt.Sprintf("commit")
 	_, err = w.Commit(commitMsg, &git.CommitOptions{
 		Author: &object.Signature{
-			Name:  g.options.GitName,
-			Email: g.options.GitEmail,
+			Name:  g.options.AuthorName,
+			Email: g.options.AuthorEmail,
 			When:  time.Now(),
 		},
 	})
