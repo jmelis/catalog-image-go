@@ -16,7 +16,7 @@ type Catalog struct {
 
 // LoadCatalog returns a new Catalog with the specified store
 func LoadCatalog(store Store) (*Catalog, error) {
-	c, err := store.load()
+	c, err := store.Load()
 	if err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func LoadCatalog(store Store) (*Catalog, error) {
 
 // Save all the bundles to storage
 func (c *Catalog) Save() error {
-	return c.store.save(c)
+	return c.store.Save(c)
 }
 
 // AddBundle adds a bundle in the local directory

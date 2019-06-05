@@ -194,7 +194,7 @@ func (g *GitStore) readFile(path string) ([]byte, error) {
 	return data, nil
 }
 
-func (g *GitStore) load() (*Catalog, error) {
+func (g *GitStore) Load() (*Catalog, error) {
 	operator := g.options.Operator
 	var bundles Bundles
 
@@ -275,7 +275,7 @@ func (g *GitStore) load() (*Catalog, error) {
 	return &Catalog{Operator: operator, store: g, Bundles: bundles}, nil
 }
 
-func (g *GitStore) save(c *Catalog) error {
+func (g *GitStore) Save(c *Catalog) error {
 	bundles := c.Bundles
 	for _, bundle := range bundles {
 		bundleDir := filepath.Join(g.options.Operator, bundle.CSV.Version())
