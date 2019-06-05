@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/jmelis/catalog-image-go/pkg/catalog"
@@ -43,18 +42,14 @@ func main() {
 	c, err := catalog.LoadCatalog(store)
 	checkIfError(err)
 
-	err = c.RemoveBundle("hive-operator.v0.1.598-1af4d6f")
+	err = c.PruneAfterCSV("hive-operator.v0.1.598-1af4d6f")
 	checkIfError(err)
-
-	for _, b := range c.Bundles {
-		fmt.Println(b.CSV.Name())
-	}
 
 	// err = c.Bundles.PruneAfterCSV("hive-operator.v0.1.598-1af4d6f")
 
 	// err = c.AddBundle(bundlePath)
 	// checkIfError(err)
 
-	// err = c.Save()
-	// checkIfError(err)
+	err = c.Save()
+	checkIfError(err)
 }

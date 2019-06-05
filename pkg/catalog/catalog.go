@@ -159,7 +159,7 @@ func (c *Catalog) PruneAfterCSV(csvName string) error {
 	}
 
 	// start with latest bundle and remove each one until we found the bundle
-	for {
+	for bundle.Name() != csvName {
 		parent, err := c.GetBundle(bundle.Replaces())
 		if err != nil {
 			return err
@@ -170,10 +170,6 @@ func (c *Catalog) PruneAfterCSV(csvName string) error {
 		}
 
 		bundle = parent
-
-		if bundle.Name() == csvName {
-			break
-		}
 	}
 
 	return nil

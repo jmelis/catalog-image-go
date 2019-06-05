@@ -278,6 +278,15 @@ func (g *GitStore) Load() (*Catalog, error) {
 
 // Save TODO
 func (g *GitStore) Save(c *Catalog) error {
+	w, err := g.r.Worktree()
+	if err != nil {
+		return err
+	}
+
+	// remove everything
+	_, err = w.Remove(c.Operator)
+
+	// write bundles
 	bundles := c.Bundles
 	for _, bundle := range bundles {
 		bundleDir := filepath.Join(g.options.Operator, bundle.CSV.Version())
@@ -298,6 +307,8 @@ func (g *GitStore) Save(c *Catalog) error {
 			return err
 		}
 	}
+
+	// write packagefile
 
 	latestBundle, err := c.FindLatestBundle()
 	if err != nil {
@@ -326,7 +337,7 @@ func (g *GitStore) commit() error {
 	}
 
 	// Commit
-	commitMsg := fmt.Sprintf("commit2")
+	commitMsg := fmt.Sprintf("commit10")
 	_, err = w.Commit(commitMsg, &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  g.options.GitName,
