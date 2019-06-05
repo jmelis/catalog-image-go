@@ -4,7 +4,8 @@ import "fmt"
 
 // CSV represents ClusterServiceVersion
 type CSV struct {
-	content []byte
+	operator string
+	content  []byte
 }
 
 // CSVSuffix all CSVs must end with this suffix
@@ -21,8 +22,8 @@ func CSVFileName(operator, version string) string {
 }
 
 // NewCSV returns a new CSV
-func NewCSV(content []byte) (CSV, error) {
-	return CSV{content: content}, nil
+func NewCSV(operator string, content []byte) (CSV, error) {
+	return CSV{operator: operator, content: content}, nil
 }
 
 // SetReplaces returns a new CSV with a modified .spec.replaces
@@ -44,6 +45,16 @@ func (c CSV) SetReplaces(replaces string) (CSV, error) {
 	c.content = []byte(uy.String())
 
 	return c, nil
+}
+
+// Name returns the full name
+func (c CSV) Name() string {
+	return CSVName(c.operator, c.Version())
+}
+
+// FileName returns the file name
+func (c CSV) FileName() string {
+	return CSVFileName(c.operator, c.Version())
 }
 
 // Replaces returns .spec.replaces. Empty string if not present.

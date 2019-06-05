@@ -20,12 +20,10 @@ func (bundles Bundles) FindLatestCSV() (string, error) {
 	setCSV := make(map[string]bool)
 
 	for _, b := range bundles {
-		version := b.CSV.Version()
-		csvName := CSVName(b.Operator, version)
 		csvReplaces := b.CSV.Replaces()
 
 		setReplaces[csvReplaces] = true
-		setCSV[csvName] = true
+		setCSV[b.CSV.Name()] = true
 	}
 
 	for replaces := range setReplaces {

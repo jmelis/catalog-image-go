@@ -222,7 +222,7 @@ func (g *GitStore) load() (Bundles, error) {
 				return nil, err
 			}
 
-			csv, err := NewCSV(content)
+			csv, err := NewCSV(operator, content)
 			if err != nil {
 				return nil, err
 			}
@@ -281,7 +281,7 @@ func (g *GitStore) save(bundles Bundles) error {
 		}
 
 		// write csv
-		csvPath := filepath.Join(bundleDir, CSVFileName(g.options.Operator, bundle.CSV.Version()))
+		csvPath := filepath.Join(bundleDir, bundle.CSV.FileName())
 		g.writeFile(csvPath, bundle.CSV.content)
 	}
 

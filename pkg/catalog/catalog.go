@@ -53,7 +53,7 @@ func (c *Catalog) AddBundle(path string) error {
 
 		if strings.HasSuffix(file.Name(), ".yaml") {
 			if strings.HasSuffix(file.Name(), CSVSuffix) {
-				csv, err = NewCSV(content)
+				csv, err = NewCSV(c.Operator, content)
 				if err != nil {
 					return err
 				}
