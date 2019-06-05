@@ -28,6 +28,10 @@ func NewCSV(operator string, content []byte) (CSV, error) {
 
 // SetReplaces returns a new CSV with a modified .spec.replaces
 func (c *CSV) SetReplaces(replaces string) error {
+	if replaces == "" {
+		return nil
+	}
+
 	var spec map[string]interface{}
 	var ok bool
 

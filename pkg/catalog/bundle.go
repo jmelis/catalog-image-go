@@ -16,6 +16,10 @@ type Bundles []Bundle
 func (bundles Bundles) FindLatestCSV() (string, error) {
 	var latestCSV string
 
+	if len(bundles) == 0 {
+		return latestCSV, nil
+	}
+
 	setReplaces := make(map[string]bool)
 	setCSV := make(map[string]bool)
 

@@ -196,6 +196,7 @@ func (g *GitStore) readFile(path string) ([]byte, error) {
 
 func (g *GitStore) load() (*Catalog, error) {
 	operator := g.options.Operator
+	var bundles Bundles
 
 	w, err := g.r.Worktree()
 	if err != nil {
@@ -204,12 +205,15 @@ func (g *GitStore) load() (*Catalog, error) {
 
 	fs := w.Filesystem
 
+	if stat, err := fs.Stat(operator); os.IsNotExist(err) || !stat.IsDir() {
+		return &Catalog{Operator: operator, store: g, Bundles: bundles}, nil
+	}
+
 	files, err := fs.ReadDir(operator)
 	if err != nil {
 		return nil, err
 	}
 
-	var bundles Bundles
 	for _, bundleDir := range files {
 		if bundleDir.IsDir() {
 			version := bundleDir.Name()
