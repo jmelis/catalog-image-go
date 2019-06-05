@@ -12,7 +12,7 @@ type Bundle struct {
 // Bundles is a collection of bundles
 type Bundles []Bundle
 
-// FindLatestCSV returns the latest CSV
+// FindLatestCSV calculates the latest CSV
 func (bundles Bundles) FindLatestCSV() (string, error) {
 	var latestCSV string
 
@@ -32,6 +32,12 @@ func (bundles Bundles) FindLatestCSV() (string, error) {
 
 	if len(setCSV) != 1 {
 		err := fmt.Errorf("Invalid number of leaves found: %d", len(setCSV))
+
+		// TODO: REMOVE
+		for csv := range setCSV {
+			fmt.Println(csv)
+		}
+
 		return latestCSV, err
 	}
 

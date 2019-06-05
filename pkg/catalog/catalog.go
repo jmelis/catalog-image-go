@@ -33,6 +33,11 @@ func (c *Catalog) AddBundle(path string) error {
 	var csv CSV
 	var sidefiles []SideFile
 
+	latestCSV, err := c.FindLatestCSV()
+	if err != nil {
+		return err
+	}
+
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		return err
@@ -47,6 +52,11 @@ func (c *Catalog) AddBundle(path string) error {
 		if strings.HasSuffix(file.Name(), ".yaml") {
 			if strings.HasSuffix(file.Name(), CSVSuffix) {
 				csv, err = NewCSV(c.Operator, content)
+				if err != nil {
+					return err
+				}
+
+				err := csv.SetReplaces(latestCSV)
 				if err != nil {
 					return err
 				}
@@ -69,4 +79,9 @@ func (c *Catalog) AddBundle(path string) error {
 	c.Bundles = append(c.Bundles, bundle)
 
 	return nil
+}
+
+// FindLatestCSV returns the latest CSV
+func (c *Catalog) FindLatestCSV() (string, error) {
+	return c.Bundles.FindLatestCSV()
 }

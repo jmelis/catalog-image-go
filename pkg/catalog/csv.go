@@ -27,24 +27,24 @@ func NewCSV(operator string, content []byte) (CSV, error) {
 }
 
 // SetReplaces returns a new CSV with a modified .spec.replaces
-func (c CSV) SetReplaces(replaces string) (CSV, error) {
+func (c CSV) SetReplaces(replaces string) error {
 	var spec map[string]interface{}
 	var ok bool
 
 	uy, err := NewUnstructuredYaml(c.content)
 	if err != nil {
-		return c, err
+		return err
 	}
 
 	if spec, ok = uy["spec"].(map[string]interface{}); !ok {
-		return c, fmt.Errorf(".spec not readable")
+		return fmt.Errorf(".spec not readable")
 	}
 
 	spec["replaces"] = replaces
 
 	c.content = []byte(uy.String())
 
-	return c, nil
+	return nil
 }
 
 // Name returns the full name
