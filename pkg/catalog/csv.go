@@ -4,7 +4,6 @@ import "fmt"
 
 // CSV represents ClusterServiceVersion
 type CSV struct {
-	version string
 	content []byte
 }
 
@@ -22,13 +21,13 @@ func CSVFileName(operator, version string) string {
 }
 
 // NewCSV returns a new CSV
-func NewCSV(version string, content []byte) (CSV, error) {
+func NewCSV(content []byte) (CSV, error) {
 	content, err := CanonicalizeYaml(content)
 	if err != nil {
 		return CSV{}, err
 	}
 
-	return CSV{version: version, content: content}, nil
+	return CSV{content: content}, nil
 }
 
 // SetReplaces returns a new CSV with a modified .spec.replaces
@@ -52,8 +51,18 @@ func (c CSV) SetReplaces(replaces string) (CSV, error) {
 	return c, nil
 }
 
-// GetReplaces returns .spec.replaces. Empty string if not present.
-func (c CSV) GetReplaces() string {
+// Replaces returns .spec.replaces. Empty string if not present.
+func (c CSV) Replaces() string {
+	return c.GetSpecStringParameter("replaces")
+}
+
+// Version returns .spec.version. Empty string if not present.
+func (c CSV) Version() string {
+	return c.GetSpecStringParameter("version")
+}
+
+// GetSpecStringParameter returns .spec.<param>. Empty string if not present.
+func (c CSV) GetSpecStringParameter(param string) string {
 	var spec map[string]interface{}
 	var replaces string
 	var ok bool
@@ -67,7 +76,7 @@ func (c CSV) GetReplaces() string {
 		return ""
 	}
 
-	if replaces, ok = spec["replaces"].(string); !ok {
+	if replaces, ok = spec[param].(string); !ok {
 		return ""
 	}
 

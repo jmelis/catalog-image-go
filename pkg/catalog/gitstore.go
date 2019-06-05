@@ -218,7 +218,7 @@ func (g *GitStore) load() (Bundles, error) {
 				return nil, err
 			}
 
-			csv, err := NewCSV(version, content)
+			csv, err := NewCSV(content)
 			if err != nil {
 				return nil, err
 			}
@@ -254,9 +254,9 @@ func (g *GitStore) load() (Bundles, error) {
 			}
 
 			bundle := Bundle{
-				operator:  g.options.Operator,
-				csv:       csv,
-				sidefiles: sidefiles,
+				Operator:  g.options.Operator,
+				CSV:       csv,
+				SideFiles: sidefiles,
 			}
 
 			bundles = append(bundles, bundle)
@@ -268,17 +268,17 @@ func (g *GitStore) load() (Bundles, error) {
 
 func (g *GitStore) save(bundles Bundles) error {
 	for _, bundle := range bundles {
-		bundleDir := filepath.Join(g.options.Operator, bundle.csv.version)
+		bundleDir := filepath.Join(g.options.Operator, bundle.CSV.Version())
 
 		// write sidefiles
-		for _, sf := range bundle.sidefiles {
+		for _, sf := range bundle.SideFiles {
 			sfPath := filepath.Join(bundleDir, sf.name)
 			g.writeFile(sfPath, sf.content)
 		}
 
 		// write csv
-		csvPath := filepath.Join(bundleDir, CSVFileName(g.options.Operator, bundle.csv.version))
-		g.writeFile(csvPath, bundle.csv.content)
+		csvPath := filepath.Join(bundleDir, CSVFileName(g.options.Operator, bundle.CSV.Version()))
+		g.writeFile(csvPath, bundle.CSV.content)
 	}
 
 	// TODO: create packagefile

@@ -4,9 +4,9 @@ import "fmt"
 
 // Bundle represents a CSV and its sidefiles if any
 type Bundle struct {
-	operator  string
-	csv       CSV
-	sidefiles []SideFile
+	Operator  string
+	CSV       CSV
+	SideFiles []SideFile
 }
 
 // Bundles is a collection of bundles
@@ -14,13 +14,15 @@ type Bundles []Bundle
 
 // FindLatestCSV returns the latest CSV
 func (bundles Bundles) FindLatestCSV() (string, error) {
+	var latestCSV string
+
 	setReplaces := make(map[string]bool)
 	setCSV := make(map[string]bool)
 
 	for _, b := range bundles {
-		version := b.csv.version
-		csvName := CSVName(b.operator, version)
-		csvReplaces := b.csv.GetReplaces()
+		version := b.CSV.Version()
+		csvName := CSVName(b.Operator, version)
+		csvReplaces := b.CSV.Replaces()
 
 		setReplaces[csvReplaces] = true
 		setCSV[csvName] = true
@@ -31,10 +33,10 @@ func (bundles Bundles) FindLatestCSV() (string, error) {
 	}
 
 	if len(setCSV) != 1 {
-		return "", fmt.Errorf("Invalid number of leaves found: %d", len(setCSV))
+		err := fmt.Errorf("Invalid number of leaves found: %d", len(setCSV))
+		return latestCSV, err
 	}
 
-	var latestCSV string
 	for csv := range setCSV {
 		latestCSV = csv
 	}
