@@ -41,11 +41,13 @@ func main() {
 	checkIfError(err)
 
 	c, err := catalog.LoadCatalog(store)
-	if err != nil {
-		panic(err)
-	}
-	c.AddBundle(bundlePath)
-	c.Save()
+	checkIfError(err)
+
+	err = c.AddBundle(bundlePath)
+	checkIfError(err)
+
+	err = c.Save()
+	checkIfError(err)
 
 	for _, b := range c.Bundles {
 		fmt.Println(b.CSV.Version())

@@ -28,3 +28,8 @@ func (p PackageFile) YAML() ([]byte, error) {
 	}
 	return y, nil
 }
+
+// FileName returns the full name of package file
+func (p PackageFile) FileName() string {
+	return p.PackageName + ".package.yaml"
+}

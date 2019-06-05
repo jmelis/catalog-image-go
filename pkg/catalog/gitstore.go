@@ -279,15 +279,37 @@ func (g *GitStore) save(c *Catalog) error {
 		// write sidefiles
 		for _, sf := range bundle.SideFiles {
 			sfPath := filepath.Join(bundleDir, sf.name)
-			g.writeFile(sfPath, sf.content)
+			err := g.writeFile(sfPath, sf.content)
+			if err != nil {
+				return err
+			}
 		}
 
 		// write csv
 		csvPath := filepath.Join(bundleDir, bundle.CSV.FileName())
-		g.writeFile(csvPath, bundle.CSV.content)
+		err := g.writeFile(csvPath, bundle.CSV.content)
+		if err != nil {
+			return err
+		}
 	}
 
-	// TODO: create packagefile
+	currentCSV, err := bundles.FindLatestCSV()
+	if err != nil {
+		return err
+	}
+
+	packageFile := NewPackageFile(g.options.Operator, g.options.Operator, currentCSV)
+
+	packageFileYAML, err := packageFile.YAML()
+	if err != nil {
+		return err
+	}
+
+	g.writeFile(filepath.Join(g.options.Operator, packageFile.FileName()), packageFileYAML)
+	if err != nil {
+		return err
+	}
+
 	return g.commit()
 }
 
