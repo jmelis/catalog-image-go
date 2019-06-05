@@ -56,7 +56,7 @@ func (c *Catalog) AddBundle(path string) error {
 					return err
 				}
 
-				err := csv.SetReplaces(latestCSV)
+				err := (&csv).SetReplaces(latestCSV)
 				if err != nil {
 					return err
 				}
@@ -81,7 +81,7 @@ func (c *Catalog) AddBundle(path string) error {
 	return nil
 }
 
-// FindLatestCSV returns the latest CSV
+// FindLatestCSV calculates the latest CSV from the bundles
 func (c *Catalog) FindLatestCSV() (string, error) {
 	return c.Bundles.FindLatestCSV()
 }
