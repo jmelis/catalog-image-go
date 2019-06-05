@@ -65,16 +65,15 @@ func (c *Catalog) AddBundle(path string) error {
 				sidefiles = append(sidefiles, sidefile)
 			}
 		}
-		bundle := Bundle{
-			Operator:  c.Operator,
-			CSV:       csv,
-			SideFiles: sidefiles,
-		}
-
-		c.Bundles = append(c.Bundles, bundle)
-
-		return nil
 	}
+
+	bundle := Bundle{
+		Operator:  c.Operator,
+		CSV:       csv,
+		SideFiles: sidefiles,
+	}
+
+	c.Bundles = append(c.Bundles, bundle)
 
 	return nil
 }

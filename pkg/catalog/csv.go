@@ -22,11 +22,6 @@ func CSVFileName(operator, version string) string {
 
 // NewCSV returns a new CSV
 func NewCSV(content []byte) (CSV, error) {
-	content, err := CanonicalizeYaml(content)
-	if err != nil {
-		return CSV{}, err
-	}
-
 	return CSV{content: content}, nil
 }
 

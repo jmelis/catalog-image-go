@@ -296,7 +296,7 @@ func (g *GitStore) commit() error {
 	}
 
 	// Commit
-	commitMsg := fmt.Sprintf("commit1")
+	commitMsg := fmt.Sprintf("commit2")
 	_, err = w.Commit(commitMsg, &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  g.options.GitName,
