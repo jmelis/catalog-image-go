@@ -33,10 +33,14 @@ func (c *Catalog) Save() error {
 func (c *Catalog) AddBundle(path, hash string) error {
 	var csv CSV
 	var sidefiles []SideFile
+	var replaces string
 
-	latestBundle, err := c.FindLatestBundle()
-	if err != nil {
-		return err
+	if len(c.Bundles) > 0 {
+		latestBundle, err := c.FindLatestBundle()
+		if err != nil {
+			return err
+		}
+		replaces = latestBundle.Name()
 	}
 
 	files, err := ioutil.ReadDir(path)
@@ -57,8 +61,10 @@ func (c *Catalog) AddBundle(path, hash string) error {
 					return err
 				}
 
-				if err := (&csv).SetReplaces(latestBundle.Name()); err != nil {
-					return err
+				if replaces != "" {
+					if err := (&csv).SetReplaces(replaces); err != nil {
+						return err
+					}
 				}
 
 				if err := (&csv).SetCatalogHash(hash); err != nil {
@@ -148,6 +154,10 @@ func (c *Catalog) RemoveBundle(csvName string) error {
 
 // PruneAfterHash TODO
 func (c *Catalog) PruneAfterHash(hash string) error {
+	if len(c.Bundles) == 0 {
+		return nil
+	}
+
 	var bundle Bundle
 
 	// ensure csvName exists
@@ -181,6 +191,10 @@ func (c *Catalog) PruneAfterHash(hash string) error {
 
 // PruneAfterCSV TODO
 func (c *Catalog) PruneAfterCSV(csvName string) error {
+	if len(c.Bundles) == 0 {
+		return nil
+	}
+
 	var bundle Bundle
 
 	// ensure csvName exists

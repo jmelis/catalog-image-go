@@ -309,7 +309,6 @@ func (g *GitStore) Save(c *Catalog) error {
 	}
 
 	// write packagefile
-
 	latestBundle, err := c.FindLatestBundle()
 	if err != nil {
 		return err
