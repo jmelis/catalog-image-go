@@ -52,7 +52,15 @@ func main() {
 		}),
 		cli.StringFlag{
 			Name:  "prune",
-			Usage: "prune descendants of `CSV` (example: hive-operator.v0.1.506-14cff03)",
+			Usage: "prune descendants of `CSV`",
+		},
+		cli.StringFlag{
+			Name:  "prune-hash",
+			Usage: "prune descendants of `HASH`",
+		},
+		cli.StringFlag{
+			Name:  "hash",
+			Usage: "sets the hash for the bundle",
 		},
 		cli.StringFlag{
 			Name:  "config",
@@ -108,19 +116,22 @@ func main() {
 				}
 
 				if pruneCSV := c.String("prune"); pruneCSV != "" {
-					err = cl.PruneAfterCSV(pruneCSV)
-					if err != nil {
+					if err := cl.PruneAfterCSV(pruneCSV); err != nil {
 						return err
 					}
 				}
 
-				err = cl.AddBundle(bundleDir)
-				if err != nil {
+				if pruneHash := c.String("prune"); pruneHash != "" {
+					if err := cl.PruneAfterHash(pruneHash); err != nil {
+						return err
+					}
+				}
+
+				if err := cl.AddBundle(bundleDir, c.String("hash")); err != nil {
 					return err
 				}
 
-				err = cl.Save()
-				if err != nil {
+				if err := cl.Save(); err != nil {
 					return err
 				}
 

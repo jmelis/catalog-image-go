@@ -30,7 +30,7 @@ func (c *Catalog) Save() error {
 }
 
 // AddBundle adds a bundle in the local directory
-func (c *Catalog) AddBundle(path string) error {
+func (c *Catalog) AddBundle(path, hash string) error {
 	var csv CSV
 	var sidefiles []SideFile
 
@@ -57,8 +57,11 @@ func (c *Catalog) AddBundle(path string) error {
 					return err
 				}
 
-				err := (&csv).SetReplaces(latestBundle.Name())
-				if err != nil {
+				if err := (&csv).SetReplaces(latestBundle.Name()); err != nil {
+					return err
+				}
+
+				if err := (&csv).SetCatalogHash(hash); err != nil {
 					return err
 				}
 			} else {
@@ -143,6 +146,39 @@ func (c *Catalog) RemoveBundle(csvName string) error {
 	return nil
 }
 
+// PruneAfterHash TODO
+func (c *Catalog) PruneAfterHash(hash string) error {
+	var bundle Bundle
+
+	// ensure csvName exists
+	if _, err := c.GetBundleByHash(hash); err != nil {
+		return err
+	}
+
+	// get latest bundle
+	bundle, err := c.FindLatestBundle()
+	if err != nil {
+		return err
+	}
+
+	// start with latest bundle and remove each one until we found the bundle
+	for bundle.Hash() != hash {
+		parent, err := c.GetBundle(bundle.Replaces())
+		if err != nil {
+			return err
+		}
+
+		if err := c.RemoveBundle(bundle.Name()); err != nil {
+			return err
+		}
+
+		bundle = parent
+	}
+
+	return nil
+
+}
+
 // PruneAfterCSV TODO
 func (c *Catalog) PruneAfterCSV(csvName string) error {
 	var bundle Bundle
@@ -186,4 +222,17 @@ func (c *Catalog) GetBundle(csvName string) (Bundle, error) {
 	}
 
 	return bundle, fmt.Errorf("Bundle %s not found", csvName)
+}
+
+// GetBundleByHash returns the Bundle object that matches a given hash
+func (c *Catalog) GetBundleByHash(hash string) (Bundle, error) {
+	var bundle Bundle
+
+	for _, b := range c.Bundles {
+		if b.Hash() == hash {
+			return b, nil
+		}
+	}
+
+	return bundle, fmt.Errorf("Bundle with hash %s not found", hash)
 }

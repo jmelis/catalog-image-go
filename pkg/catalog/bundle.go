@@ -15,6 +15,11 @@ func (b Bundle) Name() string {
 	return b.CSV.Name()
 }
 
+// Hash returns the CSV hash
+func (b Bundle) Hash() string {
+	return b.CSV.Hash()
+}
+
 // Version returns the bundle version
 func (b Bundle) Version() string {
 	return b.CSV.Version()

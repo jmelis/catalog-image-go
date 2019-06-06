@@ -48,6 +48,37 @@ func (c *CSV) SetReplaces(replaces string) error {
 	return nil
 }
 
+// SetCatalogHash sets the value for .metadata.annotations."catalog-image/hash"
+func (c *CSV) SetCatalogHash(hash string) error {
+	if hash == "" {
+		return nil
+	}
+
+	uy, err := NewUnstructuredYaml(c.content)
+	if err != nil {
+		return err
+	}
+
+	metadata, ok := uy["metadata"].(map[string]interface{})
+	if !ok {
+		return fmt.Errorf(".metadata not readable")
+	}
+
+	annotations, ok := metadata["annotations"].(map[string]interface{})
+	if !ok {
+		annotations = make(map[string]interface{})
+	}
+
+	annotations["catalog-image/hash"] = hash
+
+	metadata["annotations"] = annotations
+
+	c.content = []byte(uy.String())
+
+	fmt.Println(uy.String())
+	return nil
+}
+
 // Name returns the full name
 func (c CSV) Name() string {
 	return CSVName(c.operator, c.Version())
@@ -66,6 +97,30 @@ func (c CSV) Replaces() string {
 // Version returns .spec.version. Empty string if not present.
 func (c CSV) Version() string {
 	return c.GetSpecStringParameter("version")
+}
+
+// Hash returns .metadata.annotations."catalog-image/hash"
+func (c CSV) Hash() string {
+	uy, err := NewUnstructuredYaml(c.content)
+	if err != nil {
+		return ""
+	}
+
+	metadata, ok := uy["metadata"].(map[string]interface{})
+	if !ok {
+		return ""
+	}
+
+	annotations, ok := metadata["annotations"].(map[string]interface{})
+	if !ok {
+		return ""
+	}
+
+	if hash, ok := annotations["catalog-image/hash"].(string); ok {
+		return hash
+	}
+
+	return ""
 }
 
 // GetSpecStringParameter returns .spec.<param>. Empty string if not present.
