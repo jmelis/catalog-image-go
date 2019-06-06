@@ -50,6 +50,10 @@ func main() {
 			Name:  "git-work-dir",
 			Usage: "git-work-dir",
 		}),
+		cli.BoolFlag{
+			Name:  "git-no-push",
+			Usage: "git-no-push",
+		},
 		cli.StringFlag{
 			Name:  "prune",
 			Usage: "prune descendants of `CSV`",
@@ -103,6 +107,7 @@ func main() {
 					AuthorEmail: c.String("git-author-email"),
 					Branch:      c.String("git-branch"),
 					WorkDir:     c.String("git-work-dir"),
+					Push:        !c.Bool("git-no-push"),
 				}
 
 				store, err := catalog.NewGitStore(gitStoreOptions)

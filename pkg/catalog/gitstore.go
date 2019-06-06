@@ -33,6 +33,7 @@ type GitStoreOptions struct {
 	AuthorEmail string
 	Branch      string
 	WorkDir     string // if empty it will load on memory
+	Push        bool
 }
 
 // GitStore TODO
@@ -348,12 +349,14 @@ func (g *GitStore) commit() error {
 		return err
 	}
 
-	// // Push
-	// err = g.r.Push(&git.PushOptions{
-	// 	Auth: &http.BasicAuth{
-	// 		Username: g.options.Username,
-	// 		Password: g.options.Token,
-	// 	},
-	// })
+	if g.options.Push {
+		err = g.r.Push(&git.PushOptions{
+			Auth: &http.BasicAuth{
+				Username: g.options.Username,
+				Password: g.options.Token,
+			},
+		})
+	}
+
 	return err
 }
