@@ -51,6 +51,10 @@ func main() {
 			Usage: "gitWorkDir",
 		}),
 		cli.StringFlag{
+			Name:  "prune",
+			Usage: "prune descendants of `CSV` (example: hive-operator.v0.1.506-14cff03)",
+		},
+		cli.StringFlag{
 			Name:  "config",
 			Usage: "Load configuration from `FILE`",
 		},
@@ -103,8 +107,12 @@ func main() {
 					return err
 				}
 
-				// err = cl.PruneAfterCSV("hive-operator.v0.1.598-1af4d6f")
-				// checkIfError(err)
+				if pruneCSV := c.String("prune"); pruneCSV != "" {
+					err = cl.PruneAfterCSV(pruneCSV)
+					if err != nil {
+						return err
+					}
+				}
 
 				err = cl.AddBundle(bundleDir)
 				if err != nil {
