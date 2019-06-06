@@ -25,30 +25,30 @@ func main() {
 			Usage: "gitRepo",
 		}),
 		altsrc.NewStringFlag(cli.StringFlag{
-			Name:  "gitUsername",
-			Usage: "gitUsername",
+			Name:  "git-username",
+			Usage: "git-username",
 			Value: "app",
 		}),
 		altsrc.NewStringFlag(cli.StringFlag{
-			Name:   "gitToken",
-			Usage:  "gitToken",
+			Name:   "git-token",
+			Usage:  "git-token",
 			EnvVar: "GIT_TOKEN",
 		}),
 		altsrc.NewStringFlag(cli.StringFlag{
-			Name:  "gitAuthorName",
-			Usage: "gitAuthorName",
+			Name:  "git-author-name",
+			Usage: "git-author-name",
 		}),
 		altsrc.NewStringFlag(cli.StringFlag{
-			Name:  "gitAuthorEmail",
-			Usage: "gitAuthorEmail",
+			Name:  "git-author-email",
+			Usage: "git-author-email",
 		}),
 		altsrc.NewStringFlag(cli.StringFlag{
-			Name:  "gitBranch",
-			Usage: "gitBranch",
+			Name:  "git-branch",
+			Usage: "git-branch",
 		}),
 		altsrc.NewStringFlag(cli.StringFlag{
-			Name:  "gitWorkDir",
-			Usage: "gitWorkDir",
+			Name:  "git-work-dir",
+			Usage: "git-work-dir",
 		}),
 		cli.StringFlag{
 			Name:  "prune",
@@ -96,13 +96,13 @@ func main() {
 				gitStoreOptions := catalog.GitStoreOptions{
 					Operator:    c.String("operator"),
 					Channel:     c.String("channel"),
-					Repo:        c.String("gitRepo"),
-					Username:    c.String("gitUsername"),
-					Token:       c.String("gitToken"),
-					AuthorName:  c.String("gitAuthorName"),
-					AuthorEmail: c.String("gitAuthorEmail"),
-					Branch:      c.String("gitBranch"),
-					WorkDir:     c.String("gitWorkDir"),
+					Repo:        c.String("git-repo"),
+					Username:    c.String("git-username"),
+					Token:       c.String("git-token"),
+					AuthorName:  c.String("git-author-name"),
+					AuthorEmail: c.String("git-author-email"),
+					Branch:      c.String("git-branch"),
+					WorkDir:     c.String("git-work-dir"),
 				}
 
 				store, err := catalog.NewGitStore(gitStoreOptions)
@@ -121,7 +121,7 @@ func main() {
 					}
 				}
 
-				if pruneHash := c.String("prune"); pruneHash != "" {
+				if pruneHash := c.String("prune-hash"); pruneHash != "" {
 					if err := cl.PruneAfterHash(pruneHash); err != nil {
 						return err
 					}
@@ -131,11 +131,7 @@ func main() {
 					return err
 				}
 
-				if err := cl.Save(); err != nil {
-					return err
-				}
-
-				return nil
+				return cl.Save()
 			},
 		},
 	}
