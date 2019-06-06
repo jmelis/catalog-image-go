@@ -21,8 +21,8 @@ func main() {
 			Usage: "channel",
 		}),
 		altsrc.NewStringFlag(cli.StringFlag{
-			Name:  "gitRepo",
-			Usage: "gitRepo",
+			Name:  "git-repo",
+			Usage: "git-repo",
 		}),
 		altsrc.NewStringFlag(cli.StringFlag{
 			Name:  "git-username",
