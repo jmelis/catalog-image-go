@@ -74,8 +74,6 @@ func (c *CSV) SetCatalogHash(hash string) error {
 	metadata["annotations"] = annotations
 
 	c.content = []byte(uy.String())
-
-	fmt.Println(uy.String())
 	return nil
 }
 
